@@ -57,10 +57,10 @@ uninitializePlugin(MObject obj) {
 
 void
 polyovFileExporter::writeHeader(std::ostream& os) {
-  os << "Legend:\n"
+  os << "ovFile for Overdrive Engine\n"
+    << "by Gustavo Alvarez\n"
+    << "Type: Model\n"
     << "Delimiter = TAB\n"
-    << "() = coordinates\n"
-    << "[] = vector\n"
     << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
 }
 

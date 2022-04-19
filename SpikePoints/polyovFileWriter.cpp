@@ -76,42 +76,42 @@ polyovFileWriter::writeToFile(ostream& os) {
   os << SHAPE_DIVIDER;
   os << "\n";
 
-  if (MStatus::kFailure == outputFaces(os)) {
+  /*if (MStatus::kFailure == outputFaces(os)) {
     return MStatus::kFailure;
-  }
+  }*/
 
-  if (MStatus::kFailure == outputVertices(os)) {
+  /*if (MStatus::kFailure == outputVertices(os)) {
     return MStatus::kFailure;
-  }
+  }*/
 
   if (MStatus::kFailure == outputVertexInfo(os)) {
     return MStatus::kFailure;
   }
 
-  if (MStatus::kFailure == outputNormals(os)) {
+  /*if (MStatus::kFailure == outputNormals(os)) {
     return MStatus::kFailure;
-  }
+  }*/
 
-  if (MStatus::kFailure == outputTangents(os)) {
+  /*if (MStatus::kFailure == outputTangents(os)) {
     return MStatus::kFailure;
-  }
+  }*/
 
-  if (MStatus::kFailure == outputBinormals(os)) {
+  /*if (MStatus::kFailure == outputBinormals(os)) {
     return MStatus::kFailure;
-  }
+  }*/
 
   /*if (MStatus::kFailure == outputColors(os)) {
     return MStatus::kFailure;
   }*/
 
-  if (MStatus::kFailure == outputUVs(os)) {
+  /*if (MStatus::kFailure == outputUVs(os)) {
     return MStatus::kFailure;
-  }
+  }*/
 
-  if (MStatus::kFailure == outputSets(os)) {
+  /*if (MStatus::kFailure == outputSets(os)) {
     return MStatus::kFailure;
   }
-  os << "\n\n";
+  os << "\n\n";*/
 
   return MStatus::kSuccess;
 }
@@ -119,6 +119,30 @@ polyovFileWriter::writeToFile(ostream& os) {
 
 MStatus
 polyovFileWriter::outputFaces(ostream& os) {
+
+  //MIntArray triangleCounts;
+  //MIntArray triangleVerts;
+
+  //if (MStatus::kFailure == fMesh->getTriangles(triangleCounts, triangleVerts)) {
+  //  return MStatus::kFailure;
+  //}
+
+  //unsigned int tVerts = triangleVerts.length();
+  //unsigned int tCounts = triangleCounts.length();
+  //MIntArray indexArray;
+
+  //os << "Indices:  " << tVerts << "\n";
+  //os << LINE;
+
+  //for (unsigned int i = 0; i < tVerts; i+=3) {
+  //  os << triangleVerts[i] << ", "
+  //     << triangleVerts[i+1] << ", "
+  //     << triangleVerts[i+2] << "\n";
+  //}
+
+  ///*for (unsigned int i = 0; i < tVerts; ++i) {
+  //  os << triangleCounts[i] << "\n";
+  //}*/
 
   unsigned int faceCount = fMesh->numPolygons();
   if (0 == faceCount) {
@@ -134,7 +158,7 @@ polyovFileWriter::outputFaces(ostream& os) {
   os << LINE;
 
   unsigned int i;
-  for (i = 0; i < faceCount; ++i) {
+  for (i = 0; i < faceCount; i++) {
     os << i << DELIMITER;
 
     unsigned int indexCount = fMesh->polygonVertexCount(i, &status);
@@ -150,12 +174,13 @@ polyovFileWriter::outputFaces(ostream& os) {
     }
 
     unsigned int j;
-    for (j = 0; j < indexCount; ++j) {
+    for (j = 0; j < indexCount; j++) {
       os << indexArray[j] << " ";
     }
 
     os << "\n";
   }
+
   os << "\n\n";
 
   return MStatus::kSuccess;
@@ -197,21 +222,13 @@ polyovFileWriter::outputVertexInfo(ostream& os) {
   MIntArray indexArray;
 
   //output the header
-  os << "Vertex Info:\n";
+  os << "Faces: " << faceCount << "\n";
   os << HEADER_LINE;
-  os << "Format:  Face|faceVertexIndex|vertexIndex|normalIndex|colorIndex|";
-
-  //Add each uv set to the header
-  UVSet* currUVSet;
-  for (currUVSet = fHeadUVSet; currUVSet != NULL; currUVSet = currUVSet->next) {
-    os << "| UV_" << currUVSet->name;
-  }
-  os << "\n";
-
+  os << "Format:  Vertex [x, y, z] | Normal [x, y, z]| UV [x, y]" << DELIMITER;
   os << LINE;
 
   MIntArray normalIndexArray;
-  int colorIndex, uvID;
+  int uvID;
 
   for (i = 0; i < faceCount; ++i) {
 
@@ -234,29 +251,28 @@ polyovFileWriter::outputVertexInfo(ostream& os) {
     }
 
     for (j = 0; j < indexCount; ++j) {
-      status = fMesh->getFaceVertexColorIndex(i, j, colorIndex);
+      //status = fMesh->getFaceVertexColorIndex(i, j, colorIndex);
 
       //output the face, face vertex index, vertex index, normal index, color index
       //for the current vertex on the current face
-      os << i << DELIMITER << j << DELIMITER << indexArray[j] << DELIMITER
-        << normalIndexArray[j] << DELIMITER << colorIndex << DELIMITER;
+      os << "[" << fVertexArray[indexArray[j]].x << ","
+                << fVertexArray[indexArray[j]].y << ","
+                << fVertexArray[indexArray[j]].z << "]"
+        << DELIMITER << DELIMITER << DELIMITER
+        << fNormalArray[normalIndexArray[j]];
 
       //output each uv set index for the current vertex on the current face
-      for (currUVSet = fHeadUVSet; currUVSet != NULL; currUVSet = currUVSet->next) {
+      for (UVSet* currUVSet = fHeadUVSet; currUVSet != NULL; currUVSet = currUVSet->next) {
         status = fMesh->getPolygonUVid(i, j, uvID, &currUVSet->name);
         if (MStatus::kFailure == status) {
           MGlobal::displayError("MFnMesh::getPolygonUVid");
           return MStatus::kFailure;
         }
-        os << DELIMITER << uvID;
+        os << DELIMITER << DELIMITER << "(" << currUVSet->uArray[uvID] << ", " << currUVSet->vArray[uvID] << ")\n";
       }
-      os << "\n";
     }
-
-    os << "\n";
   }
   os << "\n";
-
   return MStatus::kSuccess;
 }
 

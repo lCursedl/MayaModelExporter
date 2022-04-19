@@ -25,7 +25,7 @@ MStatus polyWriter::extractGeometry() {
     MGlobal::displayError("MFnMesh::getPoints");
     return MStatus::kFailure;
   }
-
+  
   /*if (MStatus::kFailure == fMesh->getFaceVertexColors(fColorArray)) {
     MGlobal::displayError("MFnMesh::getFaceVertexColors");
     return MStatus::kFailure;

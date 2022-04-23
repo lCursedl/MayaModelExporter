@@ -224,7 +224,7 @@ polyovFileWriter::outputVertexInfo(ostream& os) {
   //output the header
   os << "Faces: " << faceCount << "\n";
   os << HEADER_LINE;
-  os << "Format:  Vertex [x, y, z] | Normal [x, y, z]| UV [x, y]" << DELIMITER;
+  os << "Format:  Vertex [x, y, z] | Normal [x, y, z]| UV [x, y]\n";
   os << LINE;
 
   MIntArray normalIndexArray;
@@ -255,11 +255,13 @@ polyovFileWriter::outputVertexInfo(ostream& os) {
 
       //output the face, face vertex index, vertex index, normal index, color index
       //for the current vertex on the current face
-      os << "[" << fVertexArray[indexArray[j]].x << ","
+      os << fVertexArray[indexArray[j]].x << ","
                 << fVertexArray[indexArray[j]].y << ","
-                << fVertexArray[indexArray[j]].z << "]"
-        << DELIMITER << DELIMITER << DELIMITER
-        << fNormalArray[normalIndexArray[j]];
+                << fVertexArray[indexArray[j]].z
+                << DELIMITER
+         <<  fNormalArray[normalIndexArray[j]].x << ","
+                << fNormalArray[normalIndexArray[j]].y << ","
+                << fNormalArray[normalIndexArray[j]].z;
 
       //output each uv set index for the current vertex on the current face
       for (UVSet* currUVSet = fHeadUVSet; currUVSet != NULL; currUVSet = currUVSet->next) {
@@ -268,7 +270,8 @@ polyovFileWriter::outputVertexInfo(ostream& os) {
           MGlobal::displayError("MFnMesh::getPolygonUVid");
           return MStatus::kFailure;
         }
-        os << DELIMITER << DELIMITER << "(" << currUVSet->uArray[uvID] << ", " << currUVSet->vArray[uvID] << ")\n";
+        os << DELIMITER
+        << currUVSet->uArray[uvID] << "," << currUVSet->vArray[uvID] << "\n";
       }
     }
   }

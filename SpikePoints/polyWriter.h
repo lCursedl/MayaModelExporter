@@ -32,10 +32,7 @@ class polyWriter
   MString				fCurrentUVSetName;
 
   MPointArray			fVertexArray;
-  MColorArray			fColorArray;
   MFloatVectorArray	fNormalArray;
-  MFloatVectorArray	fTangentArray;
-  MFloatVectorArray	fBinormalArray;
 
   MFnMesh* fMesh;
   MDagPath* fDagPath;

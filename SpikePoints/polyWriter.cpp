@@ -25,11 +25,6 @@ MStatus polyWriter::extractGeometry() {
     MGlobal::displayError("MFnMesh::getPoints");
     return MStatus::kFailure;
   }
-  
-  /*if (MStatus::kFailure == fMesh->getFaceVertexColors(fColorArray)) {
-    MGlobal::displayError("MFnMesh::getFaceVertexColors");
-    return MStatus::kFailure;
-  }*/
 
   if (MStatus::kFailure == fMesh->getNormals(fNormalArray, MSpace::kWorld)) {
     MGlobal::displayError("MFnMesh::getNormals");
@@ -40,18 +35,7 @@ MStatus polyWriter::extractGeometry() {
     return MStatus::kFailure;
   }
 
-  if (MStatus::kFailure == fMesh->getTangents(fTangentArray, MSpace::kWorld, &fCurrentUVSetName)) {
-    MGlobal::displayError("MFnMesh::getTangents");
-    return MStatus::kFailure;
-  }
-
-  if (MStatus::kFailure == fMesh->getBinormals(fBinormalArray, MSpace::kWorld, &fCurrentUVSetName)) {
-    MGlobal::displayError("MFnMesh::getBinormals");
-    return MStatus::kFailure;
-  }
-
   fDagPath->extendToShape();
-
   
   int instanceNum = 0;
   if (fDagPath->isInstanced()) {
@@ -159,7 +143,10 @@ MStatus polyWriter::outputSets(ostream& os) {
 
     MString textureName("");
     if (itDG.isDone()) {
-      if (MStatus::kFailure == outputSingleSet(os, MString(fnSet.name()), faces, textureName)) {
+      if (MStatus::kFailure == outputSingleSet(os,
+                                               MString(fnSet.name()),
+                                               faces,
+                                               textureName)) {
         return MStatus::kFailure;
       }
     }
@@ -167,7 +154,10 @@ MStatus polyWriter::outputSets(ostream& os) {
       MObject textureNode = itDG.currentItem();
       MPlug filenamePlug = MFnDependencyNode(textureNode).findPlug("fileTextureName", true);
       filenamePlug.getValue(textureName);
-      if (MStatus::kFailure == outputSingleSet(os, MString(fnSet.name()), faces, textureName)) {
+      if (MStatus::kFailure == outputSingleSet(os,
+                                               MString(fnSet.name()),
+                                               faces,
+                                               textureName)) {
         return MStatus::kFailure;
       }
 

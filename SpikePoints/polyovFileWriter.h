@@ -24,22 +24,9 @@ class polyovFileWriter : public polyWriter
                    MString setName,
                    MIntArray faces,
                    MString textureName) override;
-   MStatus
-   outputFaces(std::ostream& os);
-   MStatus
-   outputVertices(std::ostream& os);
+   
    MStatus
    outputVertexInfo(std::ostream& os);
-   MStatus
-   outputNormals(std::ostream& os);
-   MStatus
-   outputTangents(std::ostream& os);
-   MStatus
-   outputBinormals(std::ostream& os);
-   MStatus
-   outputColors(std::ostream& os);
-   MStatus
-   outputUVs(std::ostream& os);
 
    UVSet* fHeadUVSet;
 };

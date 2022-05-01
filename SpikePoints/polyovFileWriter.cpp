@@ -76,142 +76,12 @@ polyovFileWriter::writeToFile(ostream& os) {
   os << SHAPE_DIVIDER;
   os << "\n";
 
-  /*if (MStatus::kFailure == outputFaces(os)) {
-    return MStatus::kFailure;
-  }*/
-
-  /*if (MStatus::kFailure == outputVertices(os)) {
-    return MStatus::kFailure;
-  }*/
-
   if (MStatus::kFailure == outputVertexInfo(os)) {
     return MStatus::kFailure;
   }
 
-  /*if (MStatus::kFailure == outputNormals(os)) {
-    return MStatus::kFailure;
-  }*/
-
-  /*if (MStatus::kFailure == outputTangents(os)) {
-    return MStatus::kFailure;
-  }*/
-
-  /*if (MStatus::kFailure == outputBinormals(os)) {
-    return MStatus::kFailure;
-  }*/
-
-  /*if (MStatus::kFailure == outputColors(os)) {
-    return MStatus::kFailure;
-  }*/
-
-  /*if (MStatus::kFailure == outputUVs(os)) {
-    return MStatus::kFailure;
-  }*/
-
-  /*if (MStatus::kFailure == outputSets(os)) {
-    return MStatus::kFailure;
-  }
-  os << "\n\n";*/
-
   return MStatus::kSuccess;
 }
-
-
-MStatus
-polyovFileWriter::outputFaces(ostream& os) {
-
-  //MIntArray triangleCounts;
-  //MIntArray triangleVerts;
-
-  //if (MStatus::kFailure == fMesh->getTriangles(triangleCounts, triangleVerts)) {
-  //  return MStatus::kFailure;
-  //}
-
-  //unsigned int tVerts = triangleVerts.length();
-  //unsigned int tCounts = triangleCounts.length();
-  //MIntArray indexArray;
-
-  //os << "Indices:  " << tVerts << "\n";
-  //os << LINE;
-
-  //for (unsigned int i = 0; i < tVerts; i+=3) {
-  //  os << triangleVerts[i] << ", "
-  //     << triangleVerts[i+1] << ", "
-  //     << triangleVerts[i+2] << "\n";
-  //}
-
-  ///*for (unsigned int i = 0; i < tVerts; ++i) {
-  //  os << triangleCounts[i] << "\n";
-  //}*/
-
-  unsigned int faceCount = fMesh->numPolygons();
-  if (0 == faceCount) {
-    return MStatus::kFailure;
-  }
-
-  MStatus status;
-  MIntArray indexArray;
-
-  os << "Faces:  " << faceCount << "\n";
-  os << HEADER_LINE;
-  os << "Format:  Index|Vertex Indices\n";
-  os << LINE;
-
-  unsigned int i;
-  for (i = 0; i < faceCount; i++) {
-    os << i << DELIMITER;
-
-    unsigned int indexCount = fMesh->polygonVertexCount(i, &status);
-    if (MStatus::kFailure == status) {
-      MGlobal::displayError("MFnMesh::polygonVertexCount");
-      return MStatus::kFailure;
-    }
-
-    status = fMesh->getPolygonVertices(i, indexArray);
-    if (MStatus::kFailure == status) {
-      MGlobal::displayError("MFnMesh::getPolygonVertices");
-      return MStatus::kFailure;
-    }
-
-    unsigned int j;
-    for (j = 0; j < indexCount; j++) {
-      os << indexArray[j] << " ";
-    }
-
-    os << "\n";
-  }
-
-  os << "\n\n";
-
-  return MStatus::kSuccess;
-}
-
-
-MStatus
-polyovFileWriter::outputVertices(ostream& os) {
-
-  unsigned int vertexCount = fVertexArray.length();
-  unsigned i;
-
-  if (0 == vertexCount) {
-    return MStatus::kFailure;
-  }
-
-  os << "Vertices:  " << vertexCount << "\n";
-  os << HEADER_LINE;
-  os << "Format:  Vertex|(x, y, z)\n";
-  os << LINE;
-  for (i = 0; i < vertexCount; i++) {
-    os << i << DELIMITER << "("
-      << fVertexArray[i].x << ", "
-      << fVertexArray[i].y << ", "
-      << fVertexArray[i].z << ")\n";
-  }
-  os << "\n\n";
-
-  return MStatus::kSuccess;
-}
-
 
 MStatus
 polyovFileWriter::outputVertexInfo(ostream& os) {
@@ -224,11 +94,13 @@ polyovFileWriter::outputVertexInfo(ostream& os) {
   //output the header
   os << "Faces: " << faceCount << "\n";
   os << HEADER_LINE;
-  os << "Format:  Vertex [x, y, z] | Normal [x, y, z]| UV [x, y]\n";
+  os << "Format:  Vertex [x, y, z] | Normal [x, y, z] | Binormal [x, y, z] ";
+  os << " | Tangent[x, y, z] | UV[x, y]\n";
   os << LINE;
 
   MIntArray normalIndexArray;
   int uvID;
+  MVector binormalV, tangentV;
 
   for (i = 0; i < faceCount; ++i) {
 
@@ -251,7 +123,20 @@ polyovFileWriter::outputVertexInfo(ostream& os) {
     }
 
     for (j = 0; j < indexCount; ++j) {
-      //status = fMesh->getFaceVertexColorIndex(i, j, colorIndex);
+      
+      status = fMesh->getFaceVertexBinormal(i, j, binormalV, MSpace::kWorld);
+
+      if (MStatus::kFailure == status) {
+        MGlobal::displayError("MFnMesh::getFaceVertexBinormal");
+        return MStatus::kFailure;
+      }
+
+      status = fMesh->getFaceVertexTangent(i, j, tangentV, MSpace::kWorld);
+
+      if (MStatus::kFailure == status) {
+        MGlobal::displayError("MFnMesh::getFaceVertexTangent");
+        return MStatus::kFailure;
+      }
 
       //output the face, face vertex index, vertex index, normal index, color index
       //for the current vertex on the current face
@@ -259,9 +144,17 @@ polyovFileWriter::outputVertexInfo(ostream& os) {
                 << fVertexArray[indexArray[j]].y << ","
                 << fVertexArray[indexArray[j]].z
                 << DELIMITER
-         <<  fNormalArray[normalIndexArray[j]].x << ","
+         << fNormalArray[normalIndexArray[j]].x << ","
                 << fNormalArray[normalIndexArray[j]].y << ","
-                << fNormalArray[normalIndexArray[j]].z;
+                << fNormalArray[normalIndexArray[j]].z
+                << DELIMITER
+         << binormalV.x << ","
+                << binormalV.y << ","
+                << binormalV.z
+                << DELIMITER
+         << tangentV.x << ","
+                << tangentV.y << ","
+                << tangentV.z;
 
       //output each uv set index for the current vertex on the current face
       for (UVSet* currUVSet = fHeadUVSet; currUVSet != NULL; currUVSet = currUVSet->next) {
@@ -278,125 +171,6 @@ polyovFileWriter::outputVertexInfo(ostream& os) {
   os << "\n";
   return MStatus::kSuccess;
 }
-
-
-MStatus polyovFileWriter::outputNormals(ostream& os) {
-  unsigned int normalCount = fNormalArray.length();
-  if (0 == normalCount) {
-    return MStatus::kFailure;
-  }
-
-  os << "Normals:  " << normalCount << "\n";
-  os << HEADER_LINE;
-  os << "Format:  Index|[x, y, z]\n";
-  os << LINE;
-
-  unsigned int i;
-  for (i = 0; i < normalCount; ++i) {
-    os << i << DELIMITER << "["
-      << fNormalArray[i].x << ", "
-      << fNormalArray[i].y << ", "
-      << fNormalArray[i].z << "]\n";
-  }
-  os << "\n\n";
-
-  return MStatus::kSuccess;
-}
-
-MStatus polyovFileWriter::outputTangents(ostream& os) {
-  unsigned int tangentCount = fTangentArray.length();
-  if (0 == tangentCount) {
-    return MStatus::kFailure;
-  }
-
-  os << "Tangents:  " << tangentCount << "\n";
-  os << HEADER_LINE;
-  os << "Format:  Index|[x, y, z]\n";
-  os << LINE;
-
-  unsigned int i;
-  for (i = 0; i < tangentCount; i++) {
-    os << i << DELIMITER << "["
-      << fTangentArray[i].x << ", "
-      << fTangentArray[i].y << ", "
-      << fTangentArray[i].z << "]\n";
-  }
-  os << "\n\n";
-
-  return MStatus::kSuccess;
-}
-
-MStatus polyovFileWriter::outputBinormals(ostream& os) {
-  unsigned int binormalCount = fBinormalArray.length();
-  if (0 == binormalCount) {
-    return MStatus::kFailure;
-  }
-
-  os << "Binormals:  " << binormalCount << "\n";
-  os << HEADER_LINE;
-  os << "Format:  Index|[x, y, z]\n";
-  os << LINE;
-
-  unsigned int i;
-  for (i = 0; i < binormalCount; ++i) {
-    os << i << DELIMITER << "["
-      << fBinormalArray[i].x << ", "
-      << fBinormalArray[i].y << ", "
-      << fBinormalArray[i].z << "]\n";
-  }
-  os << "\n\n";
-
-  return MStatus::kSuccess;
-}
-
-MStatus polyovFileWriter::outputColors(ostream& os) {
-  unsigned int colorCount = fColorArray.length();
-  if (0 == colorCount) {
-    return MStatus::kFailure;
-  }
-
-  os << "Colors:  " << colorCount << "\n";
-  os << HEADER_LINE;
-  os << "Format:  Index|R G B A\n";
-  os << LINE;
-
-  unsigned int i;
-  for (i = 0; i < colorCount; ++i) {
-    os << i << DELIMITER
-      << fColorArray[i].r << " "
-      << fColorArray[i].g << " "
-      << fColorArray[i].b << " "
-      << fColorArray[i].a << "\n";
-  }
-  os << "\n\n";
-
-  return MStatus::kSuccess;
-}
-
-
-MStatus polyovFileWriter::outputUVs(ostream& os) {
-  UVSet* currUVSet;
-  unsigned int i, uvCount;
-  for (currUVSet = fHeadUVSet; currUVSet != NULL; currUVSet = currUVSet->next) {
-    if (currUVSet->name == fCurrentUVSetName) {
-      os << "Current ";
-    }
-
-    os << "UV Set:  " << currUVSet->name << "\n";
-    uvCount = currUVSet->uArray.length();
-    os << "UV Count:  " << uvCount << "\n";
-    os << HEADER_LINE;
-    os << "Format:  Index|(u, v)\n";
-    os << LINE;
-    for (i = 0; i < uvCount; i++) {
-      os << i << DELIMITER << "(" << currUVSet->uArray[i] << ", " << currUVSet->vArray[i] << ")\n";
-    }
-    os << "\n";
-  }
-  os << "\n";
-  return MStatus::kSuccess;
-}
-
 
 MStatus
 polyovFileWriter::outputSingleSet(ostream& os,
